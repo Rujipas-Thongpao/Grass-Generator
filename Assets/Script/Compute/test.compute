@@ -1,0 +1,15 @@
+#pragma kernel CSMain
+
+struct GrassData {
+    float id;
+};
+
+RWStructuredBuffer<GrassData> datas;
+
+[numthreads(10,1,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    GrassData grass;
+    grass.id = id.x;
+    datas[id.x] = grass;
+}
