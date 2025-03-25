@@ -1,5 +1,7 @@
-using UnityEngine;
 
+using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering;
 
 struct GrassData
 {
@@ -8,9 +10,7 @@ struct GrassData
 public struct GrassInstanceData
 {
     Matrix4x4 objectToWorld;
-};
-
-
+}
 
 public class GrassController : MonoBehaviour
 {
@@ -23,22 +23,18 @@ public class GrassController : MonoBehaviour
     [SerializeField]
     Mesh mesh;
 
-    GrassData[] grassDatas;
+    [SerializeField]
+    int grassAmount = 30 * 30;
 
+    [SerializeField]
+    float grassDensity;
+
+    GrassData[] grassDatas;
 
     void Awake()
     {
-        grassDatas = new GrassData[100];
-        for (int i = 0; i < 100; i++)
-        {
-            GrassData grass = new GrassData();
-            grass.position = Vector3.zero;
-            grassDatas[i] = grass;
-        }
+        grassDatas = new GrassData[grassAmount];
     }
-
-
-
 
 
     void ComputePosition(bool debug = false)
@@ -46,12 +42,14 @@ public class GrassController : MonoBehaviour
         int positionSize = sizeof(float) * 3;
         int totalSize = positionSize;
 
-        ComputeBuffer buffer = new ComputeBuffer(grassDatas.Length, positionSize);
+        ComputeBuffer buffer = new ComputeBuffer(grassDatas.Length, totalSize, ComputeBufferType.IndirectArguments);
         buffer.SetData(grassDatas);
 
-        grassCompute.SetBuffer(0, "datas", buffer);
+        grassCompute.SetBuffer(0, "_datas", buffer);
+        grassCompute.SetInt("_grassAmountPerRow", (int)Mathf.Sqrt(grassAmount));
+        grassCompute.SetFloat("_grassDensity", grassDensity);
 
-        grassCompute.Dispatch(0, 100 / 10, 1, 1);
+        grassCompute.Dispatch(0, grassAmount / 8, 1, 1);
 
         buffer.GetData(grassDatas);
 
@@ -66,15 +64,18 @@ public class GrassController : MonoBehaviour
         buffer.Dispose();
     }
 
+    void Start()
+    {
+        ComputePosition();
+    }
+
     void Update()
     {
-        int numInstances = 100;
         RenderParams rp = new RenderParams(mat);
-        Matrix4x4[] instData = new Matrix4x4[numInstances];
-        ComputePosition();
-        for (int i = 0; i < numInstances; ++i)
+        Matrix4x4[] instData = new Matrix4x4[grassAmount];
+        for (int i = 0; i < grassAmount; ++i)
         {
-            Debug.Log(grassDatas[i].position);
+            // Debug.Log(grassDatas[i].position);
             instData[i] = Matrix4x4.TRS(grassDatas[i].position, Quaternion.identity, new Vector3(1.0f, 1.0f, 1.0f));
         }
         Graphics.RenderMeshInstanced(rp, mesh, 0, instData);

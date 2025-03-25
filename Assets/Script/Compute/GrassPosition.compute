@@ -4,13 +4,16 @@ struct GrassData {
     float3 position;
 };
 
-RWStructuredBuffer<GrassData> datas;
+RWStructuredBuffer<GrassData> _datas;
+int _grassAmountPerRow;
+float _grassDensity;
 
-[numthreads(10,1,1)]
+[numthreads(8,1,1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
     GrassData grass;
-    grass.position = float3(id.x%10,1.0, id.x/10);
-    grass.position -= float3(5.0,0.0,5.0);
-    datas[id.x] = grass;
+    grass.position = float3(id.x%_grassAmountPerRow,1.0, id.x/_grassAmountPerRow);
+    grass.position -= float3(_grassAmountPerRow/2,0.0,_grassAmountPerRow/2);
+    grass.position *=  1/_grassDensity;
+    _datas[id.x] = grass;
 }
