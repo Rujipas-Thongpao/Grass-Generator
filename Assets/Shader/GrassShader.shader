@@ -26,6 +26,7 @@ Shader "Unlit/shader"
                 float3 position;
                 float noise;
                 float3 wind;
+                float angle;
             };
 
             
@@ -48,13 +49,25 @@ Shader "Unlit/shader"
                 uint instanceID : SV_InstanceID;
             };
 
+            float4 RotateAroundYInDegrees (float4 vertex, float rad)
+            {
+                float sina, cosa;
+                sincos(rad, sina, cosa);
+                float2x2 m = float2x2(cosa, -sina, sina, cosa);
+                return float4(mul(m, vertex.xz), vertex.yw).xzyw;
+            }
+
+
             v2f vert(appdata v)
             {
                 v2f o;
                 float n = GrassBuffer[v.instanceID].noise;
-                float height = 1+(n * _noiseHeightFactor);
+                float height = (n * _noiseHeightFactor);
+
+                v.vertex = RotateAroundYInDegrees(v.vertex, GrassBuffer[v.instanceID].angle);
+
                 float3 worldPos = GrassBuffer[v.instanceID].position + v.vertex.xyz ;
-                worldPos *= float3(1.,height,1.) + (float3(0.,height/2,0.));
+                worldPos *= float3(1.,height,1.) + (float3(0.,height,0.));
 
                 float3 wind = GrassBuffer[v.instanceID].wind;
 

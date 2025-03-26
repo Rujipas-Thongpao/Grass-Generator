@@ -204,13 +204,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.2775901, y: 0.31521043, z: -0.096971385, w: 0.9023207}
-  m_LocalPosition: {x: -7.1, y: 8.6, z: -8.2}
+  m_LocalRotation: {x: 0.08474733, y: 0.32827762, z: -0.02958679, w: 0.9403065}
+  m_LocalPosition: {x: -15.72, y: 8.2, z: -19.8}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 34.2, y: 38.512, z: 0}
+  m_LocalEulerAnglesHint: {x: -14.3, y: 38.512, z: 0}
 --- !u!114 &330585547
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -440,7 +440,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 47300e94d08593b4997677d875739060, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -636,8 +636,8 @@ Transform:
   m_GameObject: {fileID: 991038006}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.5, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0, y: 3.74, z: 0}
+  m_LocalScale: {x: 5, y: 10.53, z: 5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -673,10 +673,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   grassCompute: {fileID: 7200000, guid: cca9ce5e1a8a29142b028d80fe0105ef, type: 3}
   mat: {fileID: 2100000, guid: 97c2e13370b652344ae16fdec76dcfd2, type: 2}
-  mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
-  grassAmount: 20000
-  grassDensity: 1
-  noiseScale: 50
+  mesh: {fileID: -462981019419857548, guid: dc78f01426231684fa5ff1e1574d1287, type: 3}
+  grassAmount: 50000
+  grassDensity: 3
+  noiseScale: 280
+  windDirection: 45
+  windStrength: 2.18
 --- !u!4 &1134709184
 Transform:
   m_ObjectHideFlags: 0

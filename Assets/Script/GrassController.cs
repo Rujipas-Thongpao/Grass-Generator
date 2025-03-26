@@ -10,6 +10,7 @@ struct GrassData
     public Vector3 position;
     public float noise;
     public Vector3 wind;
+    public float angle;
 }
 
 public class GrassController : MonoBehaviour
@@ -90,7 +91,8 @@ public class GrassController : MonoBehaviour
         int positionSize = sizeof(float) * 3;
         int noiseSize = sizeof(float);
         int windSize = sizeof(float) * 3;
-        int totalSize = positionSize + noiseSize + windSize;
+        int angleSize = sizeof(float);
+        int totalSize = positionSize + noiseSize + windSize + angleSize;
 
         grassBuffer = new ComputeBuffer(grassDatas.Length, totalSize);
         grassBuffer.SetData(grassDatas);
