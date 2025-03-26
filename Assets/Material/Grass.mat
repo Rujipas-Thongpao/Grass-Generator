@@ -29,7 +29,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _noiseHeightFactor: 0.5
+    - _noiseHeightFactor: 0.46
     m_Colors:
     - _Color: {r: 0.5575046, g: 0.9811321, b: 0.5229619, a: 1}
     - _NewColor: {r: 0.28180626, g: 0.6886792, b: 0.14618193, a: 1}

@@ -44,7 +44,9 @@ void ComputePosition(uint3 id : SV_DispatchThreadID)
     float p = dot(_windDirection/ 5.0, float4(x,0.,z,0.));
     grass.wind = 0.0;
 
-    grass.wind = sin( p + _time) * _windDirection * _windStrength;
+    float wind;
+    Unity_GradientNoise_float( noiseUV + _time/10, 10, wind);
+    grass.wind = wind * _windDirection * _windStrength;
 
 
     float angle = (unity_noise_randomValue(noiseUV) * 2. - 1.) * 3.14; // 0 - 1
