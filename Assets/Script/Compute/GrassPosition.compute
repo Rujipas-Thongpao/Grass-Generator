@@ -1,19 +1,47 @@
-#pragma kernel CSMain
+#pragma kernel ComputePosition
+#include "./noise.compute"
+
 
 struct GrassData {
     float3 position;
+    float noise;
+    float3 wind;
 };
 
 RWStructuredBuffer<GrassData> _datas;
 int _grassAmountPerRow;
 float _grassDensity;
+float _noiseScale;
+float _time;
+float4 _windDirection;
+float _windStrength;
+
+
 
 [numthreads(8,1,1)]
-void CSMain (uint3 id : SV_DispatchThreadID)
+void ComputePosition(uint3 id : SV_DispatchThreadID)
 {
     GrassData grass;
-    grass.position = float3(id.x%_grassAmountPerRow,1.0, id.x/_grassAmountPerRow);
+    int x = id.x % _grassAmountPerRow;
+    int z = id.x / _grassAmountPerRow;
+    grass.position = float3(x,0.0,z);
     grass.position -= float3(_grassAmountPerRow/2,0.0,_grassAmountPerRow/2);
-    grass.position *=  1/_grassDensity;
+
+    // add noise
+    float2 noiseUV = float2(x, z) / _grassAmountPerRow;
+    float n = unity_valueNoise(noiseUV); 
+    Unity_SimpleNoise_float(noiseUV, _noiseScale, n);
+
+    grass.noise = n;
+
+    grass.position += float3(n, 0.,n);
+    
+    // grass.position +=  1/(_grassDensity * n);
+
+    grass.position.y = 0.;
+
+    float p = dot(_windDirection, float4(x,0.,z,0.));
+    grass.wind = sin( p + _time) * _windDirection * _windStrength;
+
     _datas[id.x] = grass;
 }

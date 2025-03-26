@@ -674,8 +674,9 @@ MonoBehaviour:
   grassCompute: {fileID: 7200000, guid: cca9ce5e1a8a29142b028d80fe0105ef, type: 3}
   mat: {fileID: 2100000, guid: 97c2e13370b652344ae16fdec76dcfd2, type: 2}
   mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
-  grassAmount: 900
-  grassDensity: 0.5
+  grassAmount: 20000
+  grassDensity: 1
+  noiseScale: 50
 --- !u!4 &1134709184
 Transform:
   m_ObjectHideFlags: 0

@@ -28,8 +28,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
-    m_Floats: []
+    m_Floats:
+    - _noiseHeightFactor: 3.81
     m_Colors:
     - _Color: {r: 0.5575046, g: 0.9811321, b: 0.5229619, a: 1}
+    - _NewColor: {r: 0.59068006, g: 0.8679245, b: 0.50356, a: 1}
+    - _OldColor: {r: 0.783195, g: 0.8301887, b: 0.4503382, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
