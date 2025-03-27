@@ -1,28 +1,28 @@
-Shader "Unlit/shader"
+Shader "Unlit/FlowerShader"
 {
     Properties
     {
-        _NewColor ("young grass color", Color) = (0, 1, 0, 1)
-        _OldColor ("old grass color", Color) = (0, 1, 1, 1)
-        _noiseHeightFactor ("Noise to Height Factor", float) = 4.0
+        _MainTex ("Texture", 2D) = "white" {}
+        _CutThreshold ("Cut Threshold", Range(0.0, 1.0)) = 0.3
         [HideInInspector] _HeightRT ("Noise RT", 2D) = "bump" {}
-
     }
     SubShader
     {
         Tags { "RenderType"="Opaque" }
+        LOD 100
         Cull off
 
         Pass
         {
-            HLSLPROGRAM
+            CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #pragma multi_compile_instancing
+            // make fog work
+            #pragma multi_compile_fog
 
             #include "UnityCG.cginc"
 
-            struct GrassData
+            struct FlowerData
             {
                 float3 position;
                 float noise;
@@ -30,12 +30,11 @@ Shader "Unlit/shader"
                 float angle;
                 float2 groundUV;
             };
-
             
-            StructuredBuffer<GrassData> GrassBuffer;
-            float4 _OldColor;
-            float4 _NewColor;
+            StructuredBuffer<FlowerData> _FlowerBuffer;
             float _noiseHeightFactor;
+            float _CutThreshold;
+            sampler2D _MainTex;
             sampler2D _HeightRT;
 
             struct appdata
@@ -65,20 +64,18 @@ Shader "Unlit/shader"
             {
                 v2f o;
                 o.uv = v.uv;
-
-                float n = GrassBuffer[v.instanceID].noise;
+                float n = _FlowerBuffer[v.instanceID].noise;
                 float height = (n * _noiseHeightFactor);
 
-                v.vertex = RotateAroundYInDegrees(v.vertex, GrassBuffer[v.instanceID].angle);
+                v.vertex = RotateAroundYInDegrees(v.vertex, _FlowerBuffer[v.instanceID].angle);
 
-                float3 worldPos = GrassBuffer[v.instanceID].position + v.vertex.xyz;
-                worldPos *= float3(1.,height,1.) + (float3(0.,height,0.));
+                float3 worldPos = _FlowerBuffer[v.instanceID].position + v.vertex.xyz;
+                // worldPos *= float3(1.,height,1.) + (float3(0.,height,0.));
 
-                float3 wind = GrassBuffer[v.instanceID].wind;
+                float3 wind = _FlowerBuffer[v.instanceID].wind;
 
-                float h = tex2Dlod(_HeightRT, float4(GrassBuffer[v.instanceID].groundUV,0.,0.)).r;
-                worldPos.y += h * 10.0;
-
+                // float h = tex2Dlod(_HeightRT, float4(_FlowerBuffer[v.instanceID].groundUV,0.,0.)).r;
+                // worldPos.y += h * 10.0;
                 worldPos += wind * worldPos.y;
 
                 o.pos = UnityObjectToClipPos(float4(worldPos, 1.0)) ;
@@ -93,17 +90,19 @@ Shader "Unlit/shader"
 
             float4 frag(v2f i) : SV_Target
             {
-                if(GrassBuffer[i.instanceID].noise <= 0.3) discard;
+                if(_FlowerBuffer[i.instanceID].noise <= _CutThreshold) discard;
 
-                float n = GrassBuffer[i.instanceID].noise;
-                float4 col = lerp(_NewColor, _OldColor, n);
-                // float3 wind = GrassBuffer[i.instanceID].wind;
+                float n = _FlowerBuffer[i.instanceID].noise;
+                float4 col = tex2D(_MainTex, i.uv);
+                // float3 wind = _FlowerBuffer[i.instanceID].wind;
                 // return float4(wind, 1.0);
-                float h = tex2D(_HeightRT, GrassBuffer[i.instanceID].groundUV).r;
+                float h = tex2D(_HeightRT, _FlowerBuffer[i.instanceID].groundUV).r;
 
+
+                // return i.uv.y;
                 return col * n * i.uv.y;
             }
-            ENDHLSL
+            ENDCG
         }
     }
 }

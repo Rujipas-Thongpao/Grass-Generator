@@ -2,8 +2,6 @@
 using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Rendering;
-using UnityEngine.Rendering;
 
 struct GrassData
 {
@@ -14,42 +12,82 @@ struct GrassData
     public float2 grondUV;
 }
 
+struct FlowerData
+{
+    public Vector3 position;
+    public float noise;
+    public Vector3 wind;
+    public float angle;
+    public float2 grondUV;
+}
+
+
 public class GrassController : MonoBehaviour
 {
+    [Header("Compute Shader")]
     [SerializeField]
     ComputeShader grassCompute;
+    [SerializeField]
+    ComputeShader flowerCompute;
 
+
+    [Header("Material")]
     [SerializeField]
     Material mat;
 
     [SerializeField]
+    Material FlowerMat;
+
+
+    [Header("Mesh")]
+    [SerializeField]
     Mesh mesh;
 
     [SerializeField]
+    Mesh flowerMesh;
+
+
+    [Header("Parameter")]
+    [SerializeField]
     int grassAmount = 900;
+    [SerializeField]
+    int flowerAmount = 100;
 
     [SerializeField]
-    float grassDensity;
+    float grassDensity = 1.5f;
 
+    [SerializeField]
+    float flowerDensity = 1f;
+
+
+    [Header("Noise")]
     [SerializeField]
     float noiseScale;
 
+    [SerializeField]
+    float flowerNoiseScale;
+
+
+    [Header("wind")]
     [SerializeField, Range(-180.0f, 180.0f)]
     float windDirection = 90.0f;
 
     [SerializeField]
     float windStrength = 1.0f;
 
+
     [SerializeField]
     RenderTexture heightRT;
 
     GrassData[] grassDatas;
+    FlowerData[] flowerDatas;
 
     private int subMeshIndex = 0;
-    private int cachedInstanceCount = -1;
-    private int cachedSubMeshIndex = -1;
+
 
     private ComputeBuffer grassBuffer;
+    private ComputeBuffer flowerBuffer;
+
     private ComputeBuffer argsBuffer;
     private Bounds renderBounds = new Bounds(Vector3.zero, Vector3.one * 1000f);
 
@@ -59,6 +97,7 @@ public class GrassController : MonoBehaviour
     void Awake()
     {
         grassDatas = new GrassData[grassAmount];
+        flowerDatas = new FlowerData[flowerAmount];
     }
 
     private void Start()
@@ -80,10 +119,11 @@ public class GrassController : MonoBehaviour
         argsBuffer.SetData(args);
 
         mat.SetTexture("_HeightRT", heightRT);
-        UpdateBuffer();
+        UpdateGrassBuffer();
+        UpdateFlowerBuffer();
     }
 
-    private void UpdateBuffer()
+    private void UpdateGrassBuffer()
     {
         // Ensure submesh index is in range
         if (mesh != null)
@@ -122,15 +162,52 @@ public class GrassController : MonoBehaviour
         grassCompute.Dispatch(0, grassAmount / 8, 1, 1);
 
         mat.SetBuffer("GrassBuffer", grassBuffer);
+    }
 
-        cachedInstanceCount = grassAmount;
-        cachedSubMeshIndex = subMeshIndex;
+
+    private void UpdateFlowerBuffer()
+    {
+        // Positions
+        if (flowerBuffer != null)
+            flowerBuffer.Release();
+
+        int positionSize = sizeof(float) * 3;
+        int noiseSize = sizeof(float);
+        int windSize = sizeof(float) * 3;
+        int angleSize = sizeof(float);
+        int groundUVSize = sizeof(float) * 2;
+        int totalSize = positionSize + noiseSize + windSize + angleSize + groundUVSize;
+
+        flowerBuffer = new ComputeBuffer(flowerDatas.Length, totalSize);
+        flowerBuffer.SetData(flowerDatas);
+
+        flowerCompute.SetBuffer(0, "_FlowerBuffer", flowerBuffer);
+        flowerCompute.SetInt("_flowerAmountPerRow", (int)Mathf.Sqrt(flowerAmount));
+        flowerCompute.SetFloat("_flowerDensity", flowerDensity);
+        flowerCompute.SetFloat("_noiseScale", flowerNoiseScale);
+        flowerCompute.SetFloat("_time", Time.time);
+        flowerCompute.SetVector(
+            "_windDirection",
+            new Vector4(
+                Mathf.Cos(Mathf.Deg2Rad * windDirection),
+                0f,
+                Mathf.Sin(Mathf.Deg2Rad * windDirection),
+                0f
+            )
+        );
+        flowerCompute.SetFloat("_windStrength", windStrength);
+
+        flowerCompute.Dispatch(0, flowerAmount / 8, 1, 1);
+
+        FlowerMat.SetBuffer("_FlowerBuffer", flowerBuffer);
     }
 
     void Update()
     {
         RenderParams rp = new RenderParams(mat);
-        UpdateBuffer();
+        UpdateGrassBuffer();
+        UpdateFlowerBuffer();
         Graphics.DrawMeshInstancedIndirect(mesh, 0, mat, renderBounds, argsBuffer);
+        Graphics.DrawMeshInstancedIndirect(flowerMesh, 0, FlowerMat, renderBounds, argsBuffer);
     }
 }

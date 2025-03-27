@@ -552,7 +552,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &991038007
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -672,12 +672,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   grassCompute: {fileID: 7200000, guid: cca9ce5e1a8a29142b028d80fe0105ef, type: 3}
+  flowerCompute: {fileID: 7200000, guid: 37451145a7707154dad9fbc2c7499032, type: 3}
   mat: {fileID: 2100000, guid: 97c2e13370b652344ae16fdec76dcfd2, type: 2}
+  FlowerMat: {fileID: 2100000, guid: 49de01ab25c10af4e9aac4ded84d4965, type: 2}
   mesh: {fileID: -462981019419857548, guid: dc78f01426231684fa5ff1e1574d1287, type: 3}
+  flowerMesh: {fileID: -2124705421725058983, guid: e7ee6ec6eda61164ca498ed6c720c69a, type: 3}
   grassAmount: 50000
-  grassDensity: 2.57
+  flowerAmount: 5000
+  grassDensity: 1.5
+  flowerDensity: 1
   noiseScale: 280
-  windDirection: 45
+  flowerNoiseScale: 100
+  windDirection: -180
   windStrength: 2.73
   heightRT: {fileID: 8400000, guid: 61b8883669eaf804c80071cbb3a6c0e3, type: 2}
 --- !u!4 &1134709184
@@ -711,7 +717,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1213826363
 MonoBehaviour:
   m_ObjectHideFlags: 0

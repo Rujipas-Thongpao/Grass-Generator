@@ -20,7 +20,6 @@ float4 _windDirection;
 float _windStrength;
 
 
-
 [numthreads(8,1,1)]
 void ComputePosition(uint3 id : SV_DispatchThreadID)
 {

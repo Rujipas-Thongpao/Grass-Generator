@@ -1,0 +1,67 @@
+#pragma kernel ComputePosition
+#include "./noise.compute"
+
+#define Rad2Deg  0.0174532925;
+
+struct FlowerData{
+    float3 position;
+    float noise;
+    float3 wind;
+    float angle;
+    float2 groundUV;
+};
+
+RWStructuredBuffer<FlowerData> _FlowerBuffer;
+int _flowerAmountPerRow;
+float _flowerDensity;
+float _noiseScale;
+float _time;
+float4 _windDirection;
+float _windStrength;
+
+[numthreads(8,1,1)]
+void ComputePosition(uint3 id : SV_DispatchThreadID)
+{
+    FlowerData flower;
+    flower.position = float3(0.,0.,0.);
+    flower.noise = 0.5;
+    flower.wind = float3(0.,0.,0.);
+    flower.angle = 0.0;
+    flower.groundUV = float2(0.,0.);
+
+    int x = id.x % _flowerAmountPerRow;
+    int z = id.x / _flowerAmountPerRow;
+
+    // add noise
+    float2 uv = float2(x, z) / _flowerAmountPerRow;
+
+    float r = unity_noise_randomValue(uv);
+    float n; Unity_SimpleNoise_float(uv , _noiseScale, n);
+
+    float np = n*2.0-1.0;
+    float rp = r*2.0-1.0;
+
+    flower.noise = n;
+    flower.position = float3(x,0.0,z);
+    flower.position -= float3(_flowerAmountPerRow/2,0.0,_flowerAmountPerRow/2);
+
+    flower.position += float3(rp + np,0., rp + np) * 10;
+    
+    flower.position *=  1/(_flowerDensity);
+    // grass.position += 1/(n) * 10;
+
+    flower.position.y = 0.;
+
+    // float p = dot(_windDirection/ 5.0, float4(x,0.,z,0.));
+
+    float wind;
+    Unity_GradientNoise_float( uv+ (-normalize(_windDirection) * _time/10), 10, wind);
+    flower.wind = wind * _windDirection * _windStrength;
+
+    float angle = (unity_noise_randomValue(uv) * 2. - 1.) * 3.14; // 0 - 1
+    flower.angle = angle;
+
+    flower.groundUV = float2(150-flower.position.x, 150-flower.position.z)/300;
+    
+    _FlowerBuffer[id.x] = flower;
+}
