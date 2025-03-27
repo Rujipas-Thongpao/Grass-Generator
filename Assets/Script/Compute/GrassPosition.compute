@@ -8,6 +8,7 @@ struct GrassData {
     float noise;
     float3 wind;
     float angle;
+    float2 groundUV;
 };
 
 RWStructuredBuffer<GrassData> _datas;
@@ -26,31 +27,39 @@ void ComputePosition(uint3 id : SV_DispatchThreadID)
     GrassData grass;
     int x = id.x % _grassAmountPerRow;
     int z = id.x / _grassAmountPerRow;
+
+    // add noise
+    float2 uv = float2(x, z) / _grassAmountPerRow;
+
+    float r = unity_noise_randomValue(uv);
+    float n; Unity_SimpleNoise_float(uv , _noiseScale, n);
+
+    float np = n*2.0-1.0;
+    float rp = r*2.0-1.0;
+
+    grass.noise = n;
     grass.position = float3(x,0.0,z);
     grass.position -= float3(_grassAmountPerRow/2,0.0,_grassAmountPerRow/2);
 
-    // add noise
-    float2 noiseUV = float2(x, z) / _grassAmountPerRow;
-    float n = unity_valueNoise(noiseUV); 
-    Unity_SimpleNoise_float(noiseUV, _noiseScale, n);
-
-    grass.noise = n;
-
-    grass.position += float3(n, 0.,n);
+    grass.position += float3(rp + np,0., rp + np) * 10;
+    // grass.position += float3(np,0. ,np);
     
     grass.position *=  1/(_grassDensity);
+
+    // grass.position += 1/(n) * 10;
+
     grass.position.y = 0.;
 
     float p = dot(_windDirection/ 5.0, float4(x,0.,z,0.));
     grass.wind = 0.0;
-
     float wind;
-    Unity_GradientNoise_float( noiseUV + _time/10, 10, wind);
+    Unity_GradientNoise_float( uv+ (-normalize(_windDirection) * _time/10), 10, wind);
     grass.wind = wind * _windDirection * _windStrength;
 
-
-    float angle = (unity_noise_randomValue(noiseUV) * 2. - 1.) * 3.14; // 0 - 1
+    float angle = (unity_noise_randomValue(uv) * 2. - 1.) * 3.14; // 0 - 1
     grass.angle = angle;
+
+    grass.groundUV = float2(150-grass.position.x, 150-grass.position.z)/300;
     
     _datas[id.x] = grass;
 }

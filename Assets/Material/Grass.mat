@@ -23,16 +23,20 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
+    - _HeightRT:
+        m_Texture: {fileID: 8400000, guid: 61b8883669eaf804c80071cbb3a6c0e3, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _MainTex:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _noiseHeightFactor: 0.46
+    - _noiseHeightFactor: 0.4
     m_Colors:
     - _Color: {r: 0.5575046, g: 0.9811321, b: 0.5229619, a: 1}
-    - _NewColor: {r: 0.28180626, g: 0.6886792, b: 0.14618193, a: 1}
-    - _OldColor: {r: 0.8241162, g: 0.9150943, b: 0.3237362, a: 1}
+    - _NewColor: {r: 0.30103177, g: 0.8301887, b: 0.12922749, a: 1}
+    - _OldColor: {r: 1, g: 0.983607, b: 0.5235849, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

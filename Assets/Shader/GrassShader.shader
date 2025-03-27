@@ -5,6 +5,7 @@ Shader "Unlit/shader"
         _NewColor ("young grass color", Color) = (0, 1, 0, 1)
         _OldColor ("old grass color", Color) = (0, 1, 1, 1)
         _noiseHeightFactor ("Noise to Height Factor", float) = 4.0
+        [NoScaleOffset] _HeightRT ("Noise RT", 2D) = "bump" {}
 
     }
     SubShader
@@ -27,6 +28,7 @@ Shader "Unlit/shader"
                 float noise;
                 float3 wind;
                 float angle;
+                float2 groundUV;
             };
 
             
@@ -34,6 +36,7 @@ Shader "Unlit/shader"
             float4 _OldColor;
             float4 _NewColor;
             float _noiseHeightFactor;
+            sampler2D _HeightRT;
 
             struct appdata
             {
@@ -61,19 +64,28 @@ Shader "Unlit/shader"
             v2f vert(appdata v)
             {
                 v2f o;
+                o.uv = v.uv;
+
+
                 float n = GrassBuffer[v.instanceID].noise;
                 float height = (n * _noiseHeightFactor);
 
                 v.vertex = RotateAroundYInDegrees(v.vertex, GrassBuffer[v.instanceID].angle);
 
-                float3 worldPos = GrassBuffer[v.instanceID].position + v.vertex.xyz ;
+                float3 worldPos = GrassBuffer[v.instanceID].position + v.vertex.xyz;
                 worldPos *= float3(1.,height,1.) + (float3(0.,height,0.));
 
                 float3 wind = GrassBuffer[v.instanceID].wind;
 
-                worldPos += wind * v.uv.y;
+                float h = tex2Dlod(_HeightRT, float4(GrassBuffer[v.instanceID].groundUV,0.,0.)).r;
+                worldPos.y += h * 10.0;
+
+                worldPos += wind * worldPos.y;
+
                 o.pos = UnityObjectToClipPos(float4(worldPos, 1.0)) ;
-                o.uv = v.uv;
+
+
+
                 o.instanceID = v.instanceID;
                 return o;
             }
@@ -86,6 +98,8 @@ Shader "Unlit/shader"
                 float4 col = lerp(_NewColor, _OldColor, n);
                 // float3 wind = GrassBuffer[i.instanceID].wind;
                 // return float4(wind, 1.0);
+                float h = tex2D(_HeightRT, GrassBuffer[i.instanceID].groundUV).r;
+                return h;
 
                 return col * n * i.uv.y;
             }

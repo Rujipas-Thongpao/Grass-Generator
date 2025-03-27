@@ -11,6 +11,7 @@ struct GrassData
     public float noise;
     public Vector3 wind;
     public float angle;
+    public float2 grondUV;
 }
 
 public class GrassController : MonoBehaviour
@@ -38,6 +39,9 @@ public class GrassController : MonoBehaviour
 
     [SerializeField]
     float windStrength = 1.0f;
+
+    [SerializeField]
+    RenderTexture heightRT;
 
     GrassData[] grassDatas;
 
@@ -75,6 +79,7 @@ public class GrassController : MonoBehaviour
         }
         argsBuffer.SetData(args);
 
+        mat.SetTexture("_HeightRT", heightRT);
         UpdateBuffer();
     }
 
@@ -92,7 +97,8 @@ public class GrassController : MonoBehaviour
         int noiseSize = sizeof(float);
         int windSize = sizeof(float) * 3;
         int angleSize = sizeof(float);
-        int totalSize = positionSize + noiseSize + windSize + angleSize;
+        int groundUVSize = sizeof(float) * 2;
+        int totalSize = positionSize + noiseSize + windSize + angleSize + groundUVSize;
 
         grassBuffer = new ComputeBuffer(grassDatas.Length, totalSize);
         grassBuffer.SetData(grassDatas);

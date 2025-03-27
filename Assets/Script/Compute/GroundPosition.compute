@@ -1,0 +1,12 @@
+#pragma kernel CSMain
+#include "./noise.compute"
+
+RWTexture2D<float4> _HeightRT;
+
+[numthreads(8,8,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    float h;
+    Unity_GradientNoise_float(id.xy,0.01,h);
+    _HeightRT[id.xy] = h;
+}
