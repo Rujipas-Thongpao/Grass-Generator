@@ -6,6 +6,7 @@ Shader "Unlit/FlowerShader"
         _CutThreshold ("Cut Threshold", Range(0.0, 1.0)) = 0.3
         _noiseHeightFactor ("Noise to Height Factor", float) = 4.0
         [HideInInspector] _HeightRT ("Noise RT", 2D) = "bump" {}
+        _alpha ("Flower Alpha", Range(0.0,1.0)) = 0.5
     }
     SubShader
     {
@@ -35,6 +36,7 @@ Shader "Unlit/FlowerShader"
             StructuredBuffer<FlowerData> _FlowerBuffer;
             float _noiseHeightFactor;
             float _CutThreshold;
+            float _alpha;
             sampler2D _MainTex;
             sampler2D _HeightRT;
 
@@ -91,7 +93,7 @@ Shader "Unlit/FlowerShader"
 
             float4 frag(v2f i) : SV_Target
             {
-                // if(_FlowerBuffer[i.instanceID].noise <= _CutThreshold) discard;
+                if(_FlowerBuffer[i.instanceID].noise <= _CutThreshold) discard;
 
                 float n = _FlowerBuffer[i.instanceID].noise;
                 float4 col = tex2D(_MainTex, i.uv);
@@ -101,7 +103,9 @@ Shader "Unlit/FlowerShader"
 
 
                 // return i.uv.y;
-                return col * n * i.uv.y;
+                col.w = 0.1;
+                
+                return col;
             }
             ENDCG
         }

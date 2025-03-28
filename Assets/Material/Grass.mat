@@ -33,10 +33,11 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _noiseHeightFactor: 0.45
+    - _CutThreshold: 0
+    - _noiseHeightFactor: 1.14
     m_Colors:
     - _Color: {r: 0.5575046, g: 0.9811321, b: 0.5229619, a: 1}
-    - _NewColor: {r: 0.30103177, g: 0.8301887, b: 0.12922749, a: 1}
-    - _OldColor: {r: 1, g: 0.983607, b: 0.5235849, a: 1}
+    - _NewColor: {r: 0.1699448, g: 0.17942618, b: 0.5377358, a: 1}
+    - _OldColor: {r: 0.94117284, g: 1, b: 0.2971698, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

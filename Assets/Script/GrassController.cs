@@ -1,171 +1,163 @@
-
 using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
 
-struct GrassData
+struct VegetationData
 {
     public Vector3 position;
     public float noise;
     public Vector3 wind;
     public float angle;
-    public float2 grondUV;
+    public float2 groundUV;
 }
-
-struct FlowerData
-{
-    public Vector3 position;
-    public float noise;
-    public Vector3 wind;
-    public float angle;
-    public float2 grondUV;
-}
-
 
 public class GrassController : MonoBehaviour
 {
     [Header("Compute Shader")]
     [SerializeField]
-    ComputeShader grassCompute;
-    [SerializeField]
-    ComputeShader flowerCompute;
-
+    private ComputeShader vegCompute;
 
     [Header("Material")]
     [SerializeField]
-    Material mat;
+    private Material grassMaterial;
 
     [SerializeField]
-    Material FlowerMat;
-
+    private Material flowerMaterial;
 
     [Header("Mesh")]
     [SerializeField]
-    Mesh mesh;
+    private Mesh grassMesh;
 
     [SerializeField]
-    Mesh flowerMesh;
-
+    private Mesh flowerMesh;
 
     [Header("Parameter")]
     [SerializeField]
-    int grassAmount = 900;
-    [SerializeField]
-    int flowerAmount = 100;
+    private int grassAmount = 900;
 
     [SerializeField]
-    float grassDensity = 1.5f;
+    private int flowerAmount = 100;
 
     [SerializeField]
-    float flowerDensity = 1f;
+    private float grassDensity = 1.5f;
 
+    [SerializeField]
+    private float flowerDensity = 1f;
 
     [Header("Noise")]
     [SerializeField]
-    float noiseScale;
+    private float grassNoiseScale;
 
     [SerializeField]
-    float flowerNoiseScale;
+    private float flowerNoiseScale;
 
-
-    [Header("wind")]
+    [Header("Wind")]
     [SerializeField, Range(-180.0f, 180.0f)]
-    float windDirection = 90.0f;
+    private float windDirection = 90.0f;
 
     [SerializeField]
-    float windStrength = 1.0f;
-
+    private float windStrength = 1.0f;
 
     [SerializeField]
-    RenderTexture heightRT;
+    private RenderTexture heightRT;
 
-    GrassData[] grassDatas;
-    FlowerData[] flowerDatas;
+    private VegetationData[] grassData;
+    private VegetationData[] flowerData;
 
+    private ComputeBuffer grassBuffer,
+        flowerBuffer,
+        grassArgsBuffer,
+        flowerArgsBuffer;
+
+    private Bounds renderBounds = new Bounds(Vector3.zero, Vector3.one * 1000f);
+    private uint[] grassArgs = new uint[5];
+    private uint[] flowerArgs = new uint[5];
     private int subMeshIndex = 0;
 
-
-    private ComputeBuffer grassBuffer;
-    private ComputeBuffer flowerBuffer;
-
-    private ComputeBuffer argsBuffer;
-    private ComputeBuffer flowerArgsBuffer;
-    private Bounds renderBounds = new Bounds(Vector3.zero, Vector3.one * 1000f);
-
-    private uint[] args = new uint[5] { 0, 0, 0, 0, 0 };
-    private uint[] flowerArgs = new uint[5] { 0, 0, 0, 0, 0 };
-
-
-    void Awake()
+    private void Awake()
     {
-        grassDatas = new GrassData[grassAmount];
-        flowerDatas = new FlowerData[flowerAmount];
+        grassData = new VegetationData[grassAmount];
+        flowerData = new VegetationData[flowerAmount];
     }
 
     private void Start()
     {
-        argsBuffer = new ComputeBuffer(1, args.Length * sizeof(int), ComputeBufferType.IndirectArguments);
+        grassArgsBuffer = CreateArgsBuffer(grassMesh, grassAmount, grassArgs);
+        flowerArgsBuffer = CreateArgsBuffer(flowerMesh, flowerAmount, flowerArgs);
 
-        // Indirect args
+        // grassMaterial.SetTexture("_HeightRT", heightRT);
+        UpdateVegetationBuffer(
+            ref grassBuffer,
+            vegCompute,
+            grassData,
+            grassAmount,
+            grassDensity,
+            grassNoiseScale,
+            grassMaterial,
+            "GrassBuffer"
+        );
+        UpdateVegetationBuffer(
+            ref flowerBuffer,
+            vegCompute,
+            flowerData,
+            flowerAmount,
+            flowerDensity,
+            flowerNoiseScale,
+            flowerMaterial,
+            "_FlowerBuffer"
+        );
+    }
+
+    private ComputeBuffer CreateArgsBuffer(Mesh mesh, int instanceCount, uint[] args)
+    {
+        ComputeBuffer buffer = new ComputeBuffer(
+            1,
+            args.Length * sizeof(int),
+            ComputeBufferType.IndirectArguments
+        );
+
         if (mesh != null)
         {
             args[0] = (uint)mesh.GetIndexCount(subMeshIndex);
-            args[1] = (uint)grassAmount;
+            args[1] = (uint)instanceCount;
             args[2] = (uint)mesh.GetIndexStart(subMeshIndex);
             args[3] = (uint)mesh.GetBaseVertex(subMeshIndex);
         }
         else
         {
-            args[0] = args[1] = args[2] = args[3] = 0;
+            for (int i = 0; i < args.Length; i++)
+                args[i] = 0;
         }
-        argsBuffer.SetData(args);
 
-        flowerArgsBuffer = new ComputeBuffer(1, flowerArgs.Length * sizeof(int), ComputeBufferType.IndirectArguments);
-
-        if (flowerMesh != null)
-        {
-            flowerArgs[0] = (uint)flowerMesh.GetIndexCount(subMeshIndex);
-            flowerArgs[1] = (uint)flowerAmount;
-            flowerArgs[2] = (uint)flowerMesh.GetIndexStart(subMeshIndex);
-            flowerArgs[3] = (uint)flowerMesh.GetBaseVertex(subMeshIndex);
-        }
-        else
-        {
-            flowerArgs[0] = flowerArgs[1] = flowerArgs[2] = flowerArgs[3] = 0;
-        }
-        flowerArgsBuffer.SetData(flowerArgs);
-
-        mat.SetTexture("_HeightRT", heightRT);
-        UpdateGrassBuffer();
-        UpdateFlowerBuffer();
+        buffer.SetData(args);
+        return buffer;
     }
 
-    private void UpdateGrassBuffer()
+    private void UpdateVegetationBuffer(
+        ref ComputeBuffer buffer,
+        ComputeShader compute,
+        VegetationData[] data,
+        int amount,
+        float density,
+        float noiseScale,
+        Material material,
+        string bufferName
+    )
     {
-        // Ensure submesh index is in range
-        if (mesh != null)
-            subMeshIndex = Mathf.Clamp(subMeshIndex, 0, mesh.subMeshCount - 1);
+        buffer?.Release();
 
-        // Positions
-        if (grassBuffer != null)
-            grassBuffer.Release();
+        int totalSize = sizeof(float) * (3 + 1 + 3 + 1 + 2); // position, noise, wind, angle, groundUV
 
-        int positionSize = sizeof(float) * 3;
-        int noiseSize = sizeof(float);
-        int windSize = sizeof(float) * 3;
-        int angleSize = sizeof(float);
-        int groundUVSize = sizeof(float) * 2;
-        int totalSize = positionSize + noiseSize + windSize + angleSize + groundUVSize;
+        // set buffer
+        buffer = new ComputeBuffer(data.Length, totalSize);
+        buffer.SetData(data);
 
-        grassBuffer = new ComputeBuffer(grassDatas.Length, totalSize);
-        grassBuffer.SetData(grassDatas);
-
-        grassCompute.SetBuffer(0, "_datas", grassBuffer);
-        grassCompute.SetInt("_grassAmountPerRow", (int)Mathf.Sqrt(grassAmount));
-        grassCompute.SetFloat("_grassDensity", grassDensity);
-        grassCompute.SetFloat("_noiseScale", noiseScale);
-        grassCompute.SetFloat("_time", Time.time);
-        grassCompute.SetVector(
+        compute.SetBuffer(0, "_Buffer", buffer);
+        compute.SetInt("_amountPerRow", (int)Mathf.Sqrt(amount));
+        compute.SetFloat("_density", density);
+        compute.SetFloat("_noiseScale", noiseScale);
+        compute.SetFloat("_time", Time.time);
+        compute.SetVector(
             "_windDirection",
             new Vector4(
                 Mathf.Cos(Mathf.Deg2Rad * windDirection),
@@ -174,63 +166,57 @@ public class GrassController : MonoBehaviour
                 0f
             )
         );
-        grassCompute.SetFloat("_windStrength", windStrength);
+        compute.SetFloat("_windStrength", windStrength);
+        compute.Dispatch(0, amount / 8, 1, 1);
 
-        grassCompute.Dispatch(0, grassAmount / 8, 1, 1);
-
-        mat.SetBuffer("GrassBuffer", grassBuffer);
+        material.SetBuffer(bufferName, buffer);
     }
 
-
-    private void UpdateFlowerBuffer()
+    private void Update()
     {
-        // Positions
-        if (flowerBuffer != null)
-            flowerBuffer.Release();
-
-        int positionSize = sizeof(float) * 3;
-        int noiseSize = sizeof(float);
-        int windSize = sizeof(float) * 3;
-        int angleSize = sizeof(float);
-        int groundUVSize = sizeof(float) * 2;
-        int totalSize = positionSize + noiseSize + windSize + angleSize + groundUVSize;
-
-        flowerBuffer = new ComputeBuffer(flowerDatas.Length, totalSize);
-        flowerBuffer.SetData(flowerDatas);
-
-        flowerCompute.SetBuffer(0, "_FlowerBuffer", flowerBuffer);
-        flowerCompute.SetInt("_flowerAmountPerRow", (int)Mathf.Sqrt(flowerAmount));
-        flowerCompute.SetFloat("_flowerDensity", flowerDensity);
-        flowerCompute.SetFloat("_noiseScale", flowerNoiseScale);
-        flowerCompute.SetFloat("_time", Time.time);
-        flowerCompute.SetVector(
-            "_windDirection",
-            new Vector4(
-                Mathf.Cos(Mathf.Deg2Rad * windDirection),
-                0f,
-                Mathf.Sin(Mathf.Deg2Rad * windDirection),
-                0f
-            )
+        UpdateVegetationBuffer(
+            ref grassBuffer,
+            vegCompute,
+            grassData,
+            grassAmount,
+            grassDensity,
+            grassNoiseScale,
+            grassMaterial,
+            "GrassBuffer"
         );
-        flowerCompute.SetFloat("_windStrength", windStrength);
+        UpdateVegetationBuffer(
+            ref flowerBuffer,
+            vegCompute,
+            flowerData,
+            flowerAmount,
+            flowerDensity,
+            flowerNoiseScale,
+            flowerMaterial,
+            "_FlowerBuffer"
+        );
 
-        flowerCompute.Dispatch(0, flowerAmount / 8, 1, 1);
+        Graphics.DrawMeshInstancedIndirect(
+            grassMesh,
+            0,
+            grassMaterial,
+            renderBounds,
+            grassArgsBuffer
+        );
 
-        FlowerMat.SetBuffer("_FlowerBuffer", flowerBuffer);
+        Graphics.DrawMeshInstancedIndirect(
+            flowerMesh,
+            0,
+            flowerMaterial,
+            renderBounds,
+            flowerArgsBuffer
+        );
     }
 
-    void OnDestroy()
+    private void OnDestroy()
     {
-        grassBuffer.Release();
-        flowerBuffer.Release();
-    }
-
-    void Update()
-    {
-        // RenderParams rp = new RenderParams(mat);
-        UpdateGrassBuffer();
-        UpdateFlowerBuffer();
-        Graphics.DrawMeshInstancedIndirect(mesh, 0, mat, renderBounds, argsBuffer);
-        Graphics.DrawMeshInstancedIndirect(flowerMesh, 0, FlowerMat, renderBounds, flowerArgsBuffer);
+        grassBuffer?.Release();
+        flowerBuffer?.Release();
+        grassArgsBuffer?.Release();
+        flowerArgsBuffer?.Release();
     }
 }

@@ -33,8 +33,9 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _CutThreshold: 0.632
-    - _noiseHeightFactor: 1.48
+    - _CutThreshold: 0.64
+    - _alpha: 0.281
+    - _noiseHeightFactor: 1.72
     m_Colors: []
   m_BuildTextureStacks: []
   m_AllowLocking: 1

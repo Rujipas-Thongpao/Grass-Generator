@@ -11,7 +11,7 @@ struct GrassData {
     float2 groundUV;
 };
 
-RWStructuredBuffer<GrassData> _datas;
+RWStructuredBuffer<GrassData> _GrassBuffer;
 int _grassAmountPerRow;
 float _grassDensity;
 float _noiseScale;
@@ -60,5 +60,5 @@ void ComputePosition(uint3 id : SV_DispatchThreadID)
 
     grass.groundUV = float2(150-grass.position.x, 150-grass.position.z)/300;
     
-    _datas[id.x] = grass;
+    _GrassBuffer[id.x] = grass;
 }
