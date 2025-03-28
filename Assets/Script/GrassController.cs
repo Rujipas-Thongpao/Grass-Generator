@@ -89,9 +89,11 @@ public class GrassController : MonoBehaviour
     private ComputeBuffer flowerBuffer;
 
     private ComputeBuffer argsBuffer;
+    private ComputeBuffer flowerArgsBuffer;
     private Bounds renderBounds = new Bounds(Vector3.zero, Vector3.one * 1000f);
 
     private uint[] args = new uint[5] { 0, 0, 0, 0, 0 };
+    private uint[] flowerArgs = new uint[5] { 0, 0, 0, 0, 0 };
 
 
     void Awake()
@@ -117,6 +119,21 @@ public class GrassController : MonoBehaviour
             args[0] = args[1] = args[2] = args[3] = 0;
         }
         argsBuffer.SetData(args);
+
+        flowerArgsBuffer = new ComputeBuffer(1, flowerArgs.Length * sizeof(int), ComputeBufferType.IndirectArguments);
+
+        if (flowerMesh != null)
+        {
+            flowerArgs[0] = (uint)flowerMesh.GetIndexCount(subMeshIndex);
+            flowerArgs[1] = (uint)flowerAmount;
+            flowerArgs[2] = (uint)flowerMesh.GetIndexStart(subMeshIndex);
+            flowerArgs[3] = (uint)flowerMesh.GetBaseVertex(subMeshIndex);
+        }
+        else
+        {
+            flowerArgs[0] = flowerArgs[1] = flowerArgs[2] = flowerArgs[3] = 0;
+        }
+        flowerArgsBuffer.SetData(flowerArgs);
 
         mat.SetTexture("_HeightRT", heightRT);
         UpdateGrassBuffer();
@@ -202,12 +219,18 @@ public class GrassController : MonoBehaviour
         FlowerMat.SetBuffer("_FlowerBuffer", flowerBuffer);
     }
 
+    void OnDestroy()
+    {
+        grassBuffer.Release();
+        flowerBuffer.Release();
+    }
+
     void Update()
     {
-        RenderParams rp = new RenderParams(mat);
+        // RenderParams rp = new RenderParams(mat);
         UpdateGrassBuffer();
         UpdateFlowerBuffer();
         Graphics.DrawMeshInstancedIndirect(mesh, 0, mat, renderBounds, argsBuffer);
-        Graphics.DrawMeshInstancedIndirect(flowerMesh, 0, FlowerMat, renderBounds, argsBuffer);
+        Graphics.DrawMeshInstancedIndirect(flowerMesh, 0, FlowerMat, renderBounds, flowerArgsBuffer);
     }
 }

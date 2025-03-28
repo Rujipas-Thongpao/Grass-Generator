@@ -93,7 +93,7 @@ Shader "Unlit/shader"
 
             float4 frag(v2f i) : SV_Target
             {
-                if(GrassBuffer[i.instanceID].noise <= 0.3) discard;
+                // if(GrassBuffer[i.instanceID].noise <= 0.3) discard;
 
                 float n = GrassBuffer[i.instanceID].noise;
                 float4 col = lerp(_NewColor, _OldColor, n);

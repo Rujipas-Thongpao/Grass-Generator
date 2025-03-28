@@ -4,6 +4,7 @@ Shader "Unlit/FlowerShader"
     {
         _MainTex ("Texture", 2D) = "white" {}
         _CutThreshold ("Cut Threshold", Range(0.0, 1.0)) = 0.3
+        _noiseHeightFactor ("Noise to Height Factor", float) = 4.0
         [HideInInspector] _HeightRT ("Noise RT", 2D) = "bump" {}
     }
     SubShader
@@ -70,7 +71,7 @@ Shader "Unlit/FlowerShader"
                 v.vertex = RotateAroundYInDegrees(v.vertex, _FlowerBuffer[v.instanceID].angle);
 
                 float3 worldPos = _FlowerBuffer[v.instanceID].position + v.vertex.xyz;
-                // worldPos *= float3(1.,height,1.) + (float3(0.,height,0.));
+                worldPos *= float3(1.,height,1.) + (float3(0.,height,0.));
 
                 float3 wind = _FlowerBuffer[v.instanceID].wind;
 
@@ -90,7 +91,7 @@ Shader "Unlit/FlowerShader"
 
             float4 frag(v2f i) : SV_Target
             {
-                if(_FlowerBuffer[i.instanceID].noise <= _CutThreshold) discard;
+                // if(_FlowerBuffer[i.instanceID].noise <= _CutThreshold) discard;
 
                 float n = _FlowerBuffer[i.instanceID].noise;
                 float4 col = tex2D(_MainTex, i.uv);
