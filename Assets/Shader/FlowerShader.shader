@@ -5,8 +5,9 @@ Shader "Unlit/FlowerShader"
         _MainTex ("Texture", 2D) = "white" {}
         _CutThreshold ("Cut Threshold", Range(0.0, 1.0)) = 0.3
         _noiseHeightFactor ("Noise to Height Factor", float) = 4.0
-        [HideInInspector] _HeightRT ("Noise RT", 2D) = "bump" {}
         _alpha ("Flower Alpha", Range(0.0,1.0)) = 0.5
+        _HeightRT ("ground height map", 2D) = "white" {}
+        _groundHeightFactor ("Ground to Height factor", float) = 1.0
     }
     SubShader
     {
@@ -39,6 +40,7 @@ Shader "Unlit/FlowerShader"
             float _alpha;
             sampler2D _MainTex;
             sampler2D _HeightRT;
+            float _groundHeightFactor;
 
             struct appdata
             {
@@ -77,9 +79,9 @@ Shader "Unlit/FlowerShader"
 
                 float3 wind = _FlowerBuffer[v.instanceID].wind;
 
-                // float h = tex2Dlod(_HeightRT, float4(_FlowerBuffer[v.instanceID].groundUV,0.,0.)).r;
-                // worldPos.y += h * 10.0;
-                worldPos += wind * worldPos.y;
+                float h = tex2Dlod(_HeightRT, float4(_FlowerBuffer[v.instanceID].groundUV,0.,0.)).r;
+                worldPos.y += h * _groundHeightFactor;
+                worldPos += wind * v.vertex.y;
 
                 o.pos = UnityObjectToClipPos(float4(worldPos, 1.0)) ;
 

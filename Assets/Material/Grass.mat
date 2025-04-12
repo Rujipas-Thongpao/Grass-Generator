@@ -34,6 +34,7 @@ Material:
     m_Ints: []
     m_Floats:
     - _CutThreshold: 0
+    - _groundHeightFactor: 32.68
     - _noiseHeightFactor: 1.14
     m_Colors:
     - _Color: {r: 0.5575046, g: 0.9811321, b: 0.5229619, a: 1}

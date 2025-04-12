@@ -61,6 +61,9 @@ public class GrassController : MonoBehaviour
     [SerializeField]
     private RenderTexture heightRT;
 
+    [SerializeField]
+    private float groundHeightScale = 1.0f;
+
     private VegetationData[] grassData;
     private VegetationData[] flowerData;
 
@@ -85,7 +88,7 @@ public class GrassController : MonoBehaviour
         grassArgsBuffer = CreateArgsBuffer(grassMesh, grassAmount, grassArgs);
         flowerArgsBuffer = CreateArgsBuffer(flowerMesh, flowerAmount, flowerArgs);
 
-        // grassMaterial.SetTexture("_HeightRT", heightRT);
+        grassMaterial.SetTexture("_HeightRT", heightRT);
         UpdateVegetationBuffer(
             ref grassBuffer,
             vegCompute,
@@ -174,6 +177,7 @@ public class GrassController : MonoBehaviour
 
     private void Update()
     {
+        // grassMaterial.SetFloat("_groundHeightFactor", groundHeightScale);
         UpdateVegetationBuffer(
             ref grassBuffer,
             vegCompute,

@@ -636,7 +636,7 @@ Transform:
   m_GameObject: {fileID: 991038006}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 3.74, z: 0}
+  m_LocalPosition: {x: 0, y: 32.5, z: 0}
   m_LocalScale: {x: 5, y: 10.53, z: 5}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -678,13 +678,14 @@ MonoBehaviour:
   flowerMesh: {fileID: -2124705421725058983, guid: e7ee6ec6eda61164ca498ed6c720c69a, type: 3}
   grassAmount: 500000
   flowerAmount: 50000
-  grassDensity: 2.44
+  grassDensity: 1.2
   flowerDensity: 0.54
   grassNoiseScale: 27.4
   flowerNoiseScale: 63.1
   windDirection: -180
   windStrength: 1.25
   heightRT: {fileID: 8400000, guid: 61b8883669eaf804c80071cbb3a6c0e3, type: 2}
+  groundHeightScale: 1
 --- !u!4 &1134709184
 Transform:
   m_ObjectHideFlags: 0
@@ -716,7 +717,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1213826363
 MonoBehaviour:
   m_ObjectHideFlags: 0

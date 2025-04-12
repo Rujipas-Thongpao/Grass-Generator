@@ -6,7 +6,8 @@ Shader "Unlit/shader"
         _OldColor ("old grass color", Color) = (0, 1, 1, 1)
         _noiseHeightFactor ("Noise to Height Factor", float) = 4.0
         _CutThreshold ("Cut Threshold", Range(0.0, 1.0)) = 0.3
-        // [HideInInspector] _HeightRT ("Noise RT", 2D) = "bump" {}
+        _HeightRT ("ground height map", 2D) = "white" {}
+        _groundHeightFactor ("Ground to Height factor", float) = 1.0
 
     }
     SubShader
@@ -37,8 +38,9 @@ Shader "Unlit/shader"
             float4 _OldColor;
             float4 _NewColor;
             float _noiseHeightFactor;
+            float _groundHeightFactor;
             float _CutThreshold;
-            // sampler2D _HeightRT;
+            sampler2D _HeightRT;
 
             struct appdata
             {
@@ -77,10 +79,10 @@ Shader "Unlit/shader"
 
                 float3 wind = GrassBuffer[v.instanceID].wind;
 
-                // float h = tex2Dlod(_HeightRT, float4(GrassBuffer[v.instanceID].groundUV,0.,0.)).r;
-                // worldPos.y += h * 10.0;
+                float h = tex2Dlod(_HeightRT, float4(GrassBuffer[v.instanceID].groundUV,0.,0.)).r;
+                worldPos.y += h * _groundHeightFactor;
 
-                worldPos += wind * worldPos.y;
+                worldPos += wind * v.vertex.y;
 
                 o.pos = UnityObjectToClipPos(float4(worldPos, 1.0)) ;
 
@@ -100,7 +102,7 @@ Shader "Unlit/shader"
                 // float3 wind = GrassBuffer[i.instanceID].wind;
                 // return float4(wind, 1.0);
                 // float h = tex2D(_HeightRT, GrassBuffer[i.instanceID].groundUV).r;
-
+                // return h;
                 return col * n * i.uv.y;
             }
             ENDHLSL

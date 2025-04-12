@@ -61,7 +61,7 @@ void ComputePosition(uint3 id : SV_DispatchThreadID)
     float angle = (unity_noise_randomValue(uv) * 2. - 1.) * 3.14; // 0 - 1
     veg.angle = angle;
 
-    veg.groundUV = float2(150-veg.position.x, 150-veg.position.z)/300;
+    veg.groundUV = float2(300-veg.position.x, 300-veg.position.z)/600;
     
     _Buffer[id.x] = veg;
 }
