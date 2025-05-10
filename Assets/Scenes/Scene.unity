@@ -118,6 +118,58 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &229470222
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 229470224}
+  - component: {fileID: 229470223}
+  m_Layer: 0
+  m_Name: CloudController
+  m_TagString: GameController
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &229470223
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 229470222}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d36812f8e7cce74297bbe5ae864b14c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cloudCompute: {fileID: 7200000, guid: 3dbb5c79f42c8284e87117262bf7596f, type: 3}
+  cloudRT: {fileID: 8400000, guid: 230b6aa45819e694a9c2076748dc065c, type: 2}
+  windSO: {fileID: 11400000, guid: de74df0d6815d7344800f0d47bb5ebef, type: 2}
+  scale: 0.01
+  octave: 5
+  smoothStep: {x: 0.15, y: 0.6}
+  lightColor: {r: 1, g: 0.8163196, b: 0.3443396, a: 1}
+  darkColor: {r: 0.1440459, g: 0.1440459, b: 0.3679245, a: 1}
+--- !u!4 &229470224
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 229470222}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -682,10 +734,10 @@ MonoBehaviour:
   flowerDensity: 0.54
   grassNoiseScale: 27.4
   flowerNoiseScale: 63.1
-  windDirection: -180
-  windStrength: 1.25
+  windSO: {fileID: 11400000, guid: de74df0d6815d7344800f0d47bb5ebef, type: 2}
   heightRT: {fileID: 8400000, guid: 61b8883669eaf804c80071cbb3a6c0e3, type: 2}
   groundHeightScale: 1
+  cloudRT: {fileID: 8400000, guid: 230b6aa45819e694a9c2076748dc065c, type: 2}
 --- !u!4 &1134709184
 Transform:
   m_ObjectHideFlags: 0
@@ -1010,3 +1062,4 @@ SceneRoots:
   - {fileID: 1213826364}
   - {fileID: 2066333117}
   - {fileID: 1325039687}
+  - {fileID: 229470224}

@@ -51,18 +51,18 @@ public class GrassController : MonoBehaviour
     [SerializeField]
     private float flowerNoiseScale;
 
-    [Header("Wind")]
-    [SerializeField, Range(-180.0f, 180.0f)]
-    private float windDirection = 90.0f;
-
     [SerializeField]
-    private float windStrength = 1.0f;
+    private WindSO windSO;
 
     [SerializeField]
     private RenderTexture heightRT;
 
     [SerializeField]
     private float groundHeightScale = 1.0f;
+
+    [SerializeField]
+    private RenderTexture cloudRT;
+
 
     private VegetationData[] grassData;
     private VegetationData[] flowerData;
@@ -88,7 +88,12 @@ public class GrassController : MonoBehaviour
         grassArgsBuffer = CreateArgsBuffer(grassMesh, grassAmount, grassArgs);
         flowerArgsBuffer = CreateArgsBuffer(flowerMesh, flowerAmount, flowerArgs);
 
+        // set up grass and flower render textures
         grassMaterial.SetTexture("_HeightRT", heightRT);
+        grassMaterial.SetTexture("_CloudRT", cloudRT);
+        flowerMaterial.SetTexture("_HeightRT", heightRT);
+        flowerMaterial.SetTexture("_CloudRT", cloudRT);
+
         UpdateVegetationBuffer(
             ref grassBuffer,
             vegCompute,
@@ -160,16 +165,18 @@ public class GrassController : MonoBehaviour
         compute.SetFloat("_density", density);
         compute.SetFloat("_noiseScale", noiseScale);
         compute.SetFloat("_time", Time.time);
+
         compute.SetVector(
             "_windDirection",
             new Vector4(
-                Mathf.Cos(Mathf.Deg2Rad * windDirection),
+                Mathf.Cos(Mathf.Deg2Rad * windSO.windDirection),
                 0f,
-                Mathf.Sin(Mathf.Deg2Rad * windDirection),
+                Mathf.Sin(Mathf.Deg2Rad * windSO.windDirection),
                 0f
             )
         );
-        compute.SetFloat("_windStrength", windStrength);
+
+        compute.SetFloat("_windStrength", windSO.windStrength);
         compute.Dispatch(0, amount / 8, 1, 1);
 
         material.SetBuffer(bufferName, buffer);

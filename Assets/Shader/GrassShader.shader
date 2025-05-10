@@ -6,7 +6,6 @@ Shader "Unlit/shader"
         _OldColor ("old grass color", Color) = (0, 1, 1, 1)
         _noiseHeightFactor ("Noise to Height Factor", float) = 4.0
         _CutThreshold ("Cut Threshold", Range(0.0, 1.0)) = 0.3
-        _HeightRT ("ground height map", 2D) = "white" {}
         _groundHeightFactor ("Ground to Height factor", float) = 1.0
 
     }
@@ -41,6 +40,7 @@ Shader "Unlit/shader"
             float _groundHeightFactor;
             float _CutThreshold;
             sampler2D _HeightRT;
+            sampler2D _CloudRT;
 
             struct appdata
             {
@@ -99,11 +99,9 @@ Shader "Unlit/shader"
 
                 float n = GrassBuffer[i.instanceID].noise;
                 float4 col = lerp(_NewColor, _OldColor, n);
-                // float3 wind = GrassBuffer[i.instanceID].wind;
-                // return float4(wind, 1.0);
-                // float h = tex2D(_HeightRT, GrassBuffer[i.instanceID].groundUV).r;
+                float4 cloud = tex2D(_CloudRT, GrassBuffer[i.instanceID].groundUV);
                 // return h;
-                return col * n * i.uv.y;
+                return col * n * i.uv.y * cloud;
             }
             ENDHLSL
         }

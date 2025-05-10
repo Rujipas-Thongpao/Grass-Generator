@@ -1,0 +1,44 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+#include "./noise.compute"
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWTexture2D<float4> _CloudRT;
+float _time;
+float _windDirection;
+float _windStrength;
+float _scale;
+int _octave;
+float2 _smoothStep;
+float _step;
+float4 _lightColor;
+float4 _darkColor;
+
+float sampleNoise(float2 _pos){
+	float value = 0.0;
+    float amplitude = .5;
+    float st = _scale;
+    float octave = _octave; 
+
+    // Loop of octaves
+    for (int i = 0; i < octave; i++) {
+		float t;
+        Unity_GradientNoise_float(_pos,st,t);
+        value += amplitude * t;
+
+        st *= 2;
+        amplitude *= .5;
+    }
+    // value = pow(value, .5) ;
+    // return step( _step, value);
+    return smoothstep(_smoothStep.x, _smoothStep.y, value);
+}
+
+// DO THE FBM thing
+[numthreads(8,8,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    float w = sampleNoise(id.xy - float2(sin(_windDirection),cos(_windDirection)) *  _time * _windStrength * 5);
+    _CloudRT[id.xy] = lerp(_darkColor, _lightColor,w);
+}

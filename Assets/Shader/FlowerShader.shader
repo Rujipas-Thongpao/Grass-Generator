@@ -6,7 +6,6 @@ Shader "Unlit/FlowerShader"
         _CutThreshold ("Cut Threshold", Range(0.0, 1.0)) = 0.3
         _noiseHeightFactor ("Noise to Height Factor", float) = 4.0
         _alpha ("Flower Alpha", Range(0.0,1.0)) = 0.5
-        _HeightRT ("ground height map", 2D) = "white" {}
         _groundHeightFactor ("Ground to Height factor", float) = 1.0
     }
     SubShader
@@ -41,6 +40,7 @@ Shader "Unlit/FlowerShader"
             sampler2D _MainTex;
             sampler2D _HeightRT;
             float _groundHeightFactor;
+            sampler2D _CloudRT;
 
             struct appdata
             {
@@ -99,15 +99,9 @@ Shader "Unlit/FlowerShader"
 
                 float n = _FlowerBuffer[i.instanceID].noise;
                 float4 col = tex2D(_MainTex, i.uv);
-                // float3 wind = _FlowerBuffer[i.instanceID].wind;
-                // return float4(wind, 1.0);
-                float h = tex2D(_HeightRT, _FlowerBuffer[i.instanceID].groundUV).r;
-
-
-                // return i.uv.y;
+                float4 cloud = tex2D(_CloudRT, _FlowerBuffer[i.instanceID].groundUV).r;
                 col.w = 0.1;
-                
-                return col;
+                return col * cloud;
             }
             ENDCG
         }
