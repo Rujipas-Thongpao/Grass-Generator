@@ -16,6 +16,7 @@ public class FPSCounter : MonoBehaviour
             _fpsText.text = "FPS: " + fps;
             _timer = Time.unscaledTime + _hudRefreshRate;
 
+
         }
     }
 }
