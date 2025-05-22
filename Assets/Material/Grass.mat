@@ -38,11 +38,11 @@ Material:
     m_Ints: []
     m_Floats:
     - _CutThreshold: 0
-    - _groundHeightFactor: 32.68
-    - _noiseHeightFactor: 1.14
+    - _groundHeightFactor: 27.18
+    - _noiseHeightFactor: 1.2
     m_Colors:
     - _Color: {r: 0.5575046, g: 0.9811321, b: 0.5229619, a: 1}
-    - _NewColor: {r: 0.9149678, g: 1, b: 0.8254717, a: 1}
-    - _OldColor: {r: 0.9324075, g: 1, b: 0.19339621, a: 1}
+    - _NewColor: {r: 0.6512452, g: 1, b: 0.49411762, a: 1}
+    - _OldColor: {r: 0.91802746, g: 1, b: 0.32549024, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

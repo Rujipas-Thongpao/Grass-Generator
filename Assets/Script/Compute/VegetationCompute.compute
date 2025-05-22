@@ -46,13 +46,8 @@ void ComputePosition(uint3 id : SV_DispatchThreadID)
     veg.position -= float3(_amountPerRow/2,0.0,_amountPerRow/2);
 
     veg.position += float3(rp + np,0., rp + np) * 10;
-    
     veg.position *=  1/(_density);
-    // veg.position += 1/(n) * 10;
-
     veg.position.y = 0.;
-
-    // float p = dot(_windDirection/ 5.0, float4(x,0.,z,0.));
 
     float wind;
     Unity_GradientNoise_float( uv+ (-normalize(_windDirection) * _time/10), 10, wind);

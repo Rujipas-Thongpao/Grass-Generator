@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e610df524ac81544ae8f51e9d014dca, type: 3}
   m_Name: Wind
   m_EditorClassIdentifier: 
-  windDirection: -52
-  windStrength: 1.33
+  windDirection: -19
+  windStrength: 0.78

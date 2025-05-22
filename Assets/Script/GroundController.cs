@@ -39,12 +39,8 @@ public class GroundController : MonoBehaviour
 
     void Awake()
     {
-        // vertCount = groundMesh.vertexCount;
-        // vertCountWidth = (int)Mathf.Sqrt(vertCount);
-        // heightRT = new RenderTexture((int)resolution, (int)resolution, 16);
         heightRT.enableRandomWrite = true;
         heightRT.Create();
-
     }
 
     void Start()
