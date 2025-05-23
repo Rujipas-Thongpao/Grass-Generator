@@ -146,61 +146,51 @@ public class PlayerController : MonoBehaviour
         }
         
         // --- Player Movement ---
-        float inputX = Input.GetAxis("Horizontal"); 
-        float inputZ = Input.GetAxis("Vertical"); 
-        Vector3 moveDirection = (transform.right * inputX + transform.forward * inputZ).normalized; 
+        float inputX = Input.GetAxis("Horizontal");
+        float inputZ = Input.GetAxis("Vertical");
+        Vector3 moveDirection = (transform.right * inputX + transform.forward * inputZ).normalized;
 
-        // If useSampledHeight is true, player height is adjusted based on the RenderTexture.
-        // Otherwise, standard CharacterController gravity and grounding are used.
         if (useSampledHeight) {
-            // Sample terrain height at the player's current XZ position.
+            // 1. Apply horizontal movement
+            controller.Move(new Vector3(moveDirection.x * speed * Time.deltaTime, 0, moveDirection.z * speed * Time.deltaTime));
+
+            // 2. Determine target height and apply vertical correction
             float targetTerrainHeight = GetTerrainHeightFromRT(transform.position);
-            // Calculate current Y position of the player's feet.
             float currentFeetY = transform.position.y - playerFeetOffset;
-            // Determine the vertical error to correct player's height.
             float heightError = targetTerrainHeight - currentFeetY;
             
-            // Construct the combined movement vector.
-            // Horizontal movement is based on input, scaled by speed and deltaTime.
-            // Vertical movement directly applies the calculated heightError to snap to terrain.
-            Vector3 combinedMove = new Vector3(moveDirection.x * speed * Time.deltaTime, heightError, moveDirection.z * speed * Time.deltaTime);
-            controller.Move(combinedMove);
+            controller.Move(new Vector3(0, heightError, 0)); // Apply vertical correction
 
-            // Determine if grounded based on proximity to the target terrain height.
-            isGrounded = Mathf.Abs(heightError) < 0.05f; 
-            if (isGrounded && velocity.y < 0) {
-                velocity.y = -2f; // Reset vertical velocity to stick to ground.
+            isGrounded = Mathf.Abs(heightError) < 0.1f; // Adjusted threshold
+
+            if (isGrounded) {
+                velocity.y = -2f; // Stick to ground
+            } else {
+                // Not grounded on RT (e.g. large height error, or fell off an edge)
+                velocity.y += gravity * Time.deltaTime;
             }
-        } else {
-            // Standard CharacterController movement without RT height adjustment.
-            controller.Move(moveDirection * speed * Time.deltaTime); // Apply horizontal movement.
-            isGrounded = controller.isGrounded; // Use CharacterController's built-in ground check.
+        } else { // Standard CharacterController movement
+            // Apply horizontal movement
+            controller.Move(moveDirection * speed * Time.deltaTime); 
+            isGrounded = controller.isGrounded;
+
             if (isGrounded && velocity.y < 0) {
-                velocity.y = -2f; // Reset vertical velocity if grounded.
+                velocity.y = -2f; // Stick to ground
+            }
+            // Apply gravity if not grounded
+            if (!isGrounded) { 
+                velocity.y += gravity * Time.deltaTime;
             }
         }
 
         // --- Jumping ---
-        if(Input.GetButtonDown("Jump") && isGrounded)
-        {
+        if (Input.GetButtonDown("Jump") && isGrounded) {
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
-            isGrounded = false; // Player is no longer grounded after initiating a jump.
+            isGrounded = false; // Player is now airborne
         }
-        
-        // --- Apply Gravity ---
-        // Apply gravity if:
-        // 1. The player is not grounded (applies to both standard and RT sampled movement).
-        // 2. Or, if not using sampled height (ensuring standard CC gravity works as expected).
-        if (!isGrounded || !useSampledHeight) { 
-            velocity.y += gravity * Time.deltaTime;
-        } else if (useSampledHeight && isGrounded) {
-            // If using sampled height and grounded, ensure velocity.y is at a 'stick to ground' value.
-            // This prevents accumulation of downward velocity if heightError was minimal but not zero.
-            velocity.y = Mathf.Max(velocity.y, -2f); 
-        }
-        
-        // Apply any accumulated vertical velocity (from gravity or jumping).
-        controller.Move(velocity * Time.deltaTime); 
+
+        // --- Apply Final Vertical Velocity (Gravity/Jump/Sticking) ---
+        controller.Move(velocity * Time.deltaTime);
     }
 
     void OnDestroy() {
