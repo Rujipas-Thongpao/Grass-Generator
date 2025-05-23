@@ -62,11 +62,12 @@ public class PlayerController : MonoBehaviour
 
     void InitializeHeightSampling() {
         if (heightRT != null) {
-            // Check if texture needs to be recreated (null, wrong size, or wrong format)
-            if (tempHeightTexture == null || tempHeightTexture.width != 1 || tempHeightTexture.height != 1 || tempHeightTexture.format != heightRT.format) {
+            // If tempHeightTexture is null, or if we want to ensure it's a 1x1 texture
+            if (tempHeightTexture == null || tempHeightTexture.width != 1 || tempHeightTexture.height != 1) {
                 if (tempHeightTexture != null) Destroy(tempHeightTexture);
-                tempHeightTexture = new Texture2D(1, 1, heightRT.format, false);
-                // Debug.Log($"PlayerController: tempHeightTexture recreated. Format: {heightRT.format}");
+                // Create with a common, readable format. ReadPixels will handle conversion if possible.
+                tempHeightTexture = new Texture2D(1, 1, TextureFormat.RGBA32, false);
+                // Debug.Log($"PlayerController: tempHeightTexture recreated with RGBA32 format.");
             }
             useSampledHeight = true;
         } else {
@@ -138,7 +139,8 @@ public class PlayerController : MonoBehaviour
 
         // --- Initialize Height Sampling (Check if RT changed at runtime) ---
         bool currentRtAssigned = heightRT != null;
-        if (currentRtAssigned != useSampledHeight || (currentRtAssigned && (tempHeightTexture == null || tempHeightTexture.format != heightRT.format)))
+        // If the assignment status of heightRT has changed OR if it's assigned but our temp texture is somehow null
+        if (currentRtAssigned != useSampledHeight || (currentRtAssigned && tempHeightTexture == null) )
         {
             InitializeHeightSampling();
         }
