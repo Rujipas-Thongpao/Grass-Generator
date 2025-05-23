@@ -79,8 +79,10 @@ public class GrassController : MonoBehaviour
 
     private void Awake()
     {
-        grassData = new VegetationData[grassAmount];
-        flowerData = new VegetationData[flowerAmount];
+        grassData = new VegetationData[grassAmount]; // BUG_POTENTIAL: This array is initialized but never populated on the CPU side.
+                                                    // The compute shader fills the buffer on the GPU. If this data is ever needed
+                                                    // on the CPU, it would need to be explicitly read back.
+        flowerData = new VegetationData[flowerAmount]; // Same potential issue as grassData.
     }
 
     private void Start()
@@ -94,6 +96,9 @@ public class GrassController : MonoBehaviour
         flowerMaterial.SetTexture("_HeightRT", heightRT);
         flowerMaterial.SetTexture("_CloudRT", cloudRT);
 
+        // IMPROVEMENT_PERFORMANCE_SAFETY: Consider using Shader.PropertyToID("GrassBuffer")
+        // to get an integer ID for the shader property. This is more efficient at runtime
+        // and helps prevent issues from typos in the string name.
         UpdateVegetationBuffer(
             ref grassBuffer,
             vegCompute,
@@ -102,7 +107,7 @@ public class GrassController : MonoBehaviour
             grassDensity,
             grassNoiseScale,
             grassMaterial,
-            "GrassBuffer"
+            "GrassBuffer" // Store Shader.PropertyToID("GrassBuffer") in a static int for efficiency
         );
         UpdateVegetationBuffer(
             ref flowerBuffer,
@@ -112,7 +117,7 @@ public class GrassController : MonoBehaviour
             flowerDensity,
             flowerNoiseScale,
             flowerMaterial,
-            "_FlowerBuffer"
+            "_FlowerBuffer" // Similarly, use Shader.PropertyToID("_FlowerBuffer")
         );
     }
 
@@ -154,6 +159,8 @@ public class GrassController : MonoBehaviour
     {
         buffer?.Release();
 
+        // IMPROVEMENT_ROBUSTNESS: Using Marshal.SizeOf would be more robust to changes in the VegetationData struct.
+        // For example: int totalSize = System.Runtime.InteropServices.Marshal.SizeOf(typeof(VegetationData));
         int totalSize = sizeof(float) * (3 + 1 + 3 + 1 + 2); // position, noise, wind, angle, groundUV
 
         // set buffer
@@ -179,12 +186,23 @@ public class GrassController : MonoBehaviour
         compute.SetFloat("_windStrength", windSO.windStrength);
         compute.Dispatch(0, amount / 8, 1, 1);
 
-        material.SetBuffer(bufferName, buffer);
+        material.SetBuffer(bufferName, buffer); // Or material.SetBuffer(Shader.PropertyToID(bufferName), buffer);
+                                               // if passing string, or just pass the int ID.
     }
 
     private void Update()
     {
+        // CLARITY_SUGGESTION: The following line is commented out.
+        // If groundHeightScale is intended to be dynamically updated, this should be enabled.
+        // Otherwise, if it's set once or managed via the material inspector, this line might be obsolete.
         // grassMaterial.SetFloat("_groundHeightFactor", groundHeightScale);
+
+        // PERFORMANCE_IMPROVEMENT: UpdateVegetationBuffer is called every frame for both grass and flowers.
+        // This involves releasing and recreating ComputeBuffers and re-dispatching the compute shader,
+        // which can be performance-intensive. Consider updating these buffers only when parameters
+        // (like wind, density, noise scale, or underlying terrain/textures) change,
+        // or at a less frequent interval if continuous animation (like time-based noise evolution) is desired
+        // without other parameter changes.
         UpdateVegetationBuffer(
             ref grassBuffer,
             vegCompute,
