@@ -4,23 +4,23 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     // Camera
-    public float mouseSensitivity = 100f;
-    public Transform playerCamera;
+    public float MouseSensitivity = 100f;
+    public Transform PlayerCamera;
     private float xRotation = 0f; // For camera pitch
 
     // Movement
-    public float speed = 12f;
-    public float gravity = -9.81f * 2; // Multiplied for a slightly stronger gravity
-    public float jumpHeight = 3f;
+    public float Speed = 12f;
+    public float Gravity = -9.81f * 2; // Multiplied for a slightly stronger gravity
+    public float JumpHeight = 3f;
 
     // RenderTexture Height Sampling
-    public RenderTexture heightRT;
-    public Vector3 terrainWorldSize = new Vector3(1000, 100, 1000); // X=Width, Y=MaxHeight, Z=Length
+    public RenderTexture HeightRT;
+    public Vector3 TerrainWorldSize = new Vector3(1000, 100, 1000); // X=Width, Y=MaxHeight, Z=Length
     // The world position of the terrain's corner corresponding to UV (0,0) on the heightRT.
-    public Vector3 terrainOrigin = Vector3.zero; 
-    public Vector2Int heightRTSolution = new Vector2Int(1024, 1024); // Resolution of heightRT
+    public Vector3 TerrainOrigin = Vector3.zero; 
+    public Vector2Int HeightRTSolution = new Vector2Int(1024, 1024); // Resolution of heightRT
 
-    private CharacterController controller;
+    private CharacterController characterController;
     private Vector3 velocity; // For gravity and jumping
     private bool isGrounded; // True if on CharacterController ground or RT surface
 
@@ -34,12 +34,12 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         // Camera Setup
-        if (playerCamera == null)
+        if (PlayerCamera == null)
         {
             Camera mainCamera = Camera.main;
             if (mainCamera != null) 
             {
-                playerCamera = mainCamera.transform;
+                PlayerCamera = mainCamera.transform;
             }
             else 
             {
@@ -52,16 +52,16 @@ public class PlayerController : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
 
         // Character Controller
-        controller = GetComponent<CharacterController>();
+        characterController = GetComponent<CharacterController>();
         // Calculate the offset from the transform's pivot to the character's feet.
-        playerFeetOffset = controller.height * 0.5f - controller.center.y;
+        playerFeetOffset = characterController.height * 0.5f - characterController.center.y;
 
         // RenderTexture Height Sampling Setup
         InitializeHeightSampling();
     }
 
     void InitializeHeightSampling() {
-        if (heightRT != null) {
+        if (HeightRT != null) {
             // If tempHeightTexture is null, or if we want to ensure it's a 1x1 texture
             if (tempHeightTexture == null || tempHeightTexture.width != 1 || tempHeightTexture.height != 1) {
                 if (tempHeightTexture != null) Destroy(tempHeightTexture);
@@ -84,9 +84,9 @@ public class PlayerController : MonoBehaviour
         }
 
         // --- UV Calculation ---
-        // Convert world position to UV coordinates relative to the terrainOrigin and terrainWorldSize.
-        float u = (worldPosition.x - terrainOrigin.x) / terrainWorldSize.x;
-        float v = (worldPosition.z - terrainOrigin.z) / terrainWorldSize.z;
+        // Convert world position to UV coordinates relative to the TerrainOrigin and TerrainWorldSize.
+        float u = (worldPosition.x - TerrainOrigin.x) / TerrainWorldSize.x;
+        float v = (worldPosition.z - TerrainOrigin.z) / TerrainWorldSize.z;
 
         // Clamp UVs to [0, 1] range to prevent reading outside the texture boundaries.
         u = Mathf.Clamp01(u);
@@ -95,14 +95,14 @@ public class PlayerController : MonoBehaviour
         // Convert UV to pixel coordinates for the RenderTexture.
         // Subtract 1 because pixel coordinates are 0-indexed (0 to width-1 or height-1).
         // Mathf.Max ensures the index is not negative if resolution is very small.
-        int texX = Mathf.FloorToInt(u * Mathf.Max(0, heightRTSolution.x - 1));
-        int texY = Mathf.FloorToInt(v * Mathf.Max(0, heightRTSolution.y - 1));
+        int texX = Mathf.FloorToInt(u * Mathf.Max(0, HeightRTSolution.x - 1));
+        int texY = Mathf.FloorToInt(v * Mathf.Max(0, HeightRTSolution.y - 1));
         
         // --- Pixel Reading ---
         // Store the currently active RenderTexture to restore it later.
         RenderTexture prevActive = RenderTexture.active;
         // Set the target RenderTexture as active to read from it.
-        RenderTexture.active = heightRT;
+        RenderTexture.active = HeightRT;
 
         try {
             // ReadPixels is a synchronous operation and can have a performance impact,
@@ -111,7 +111,7 @@ public class PlayerController : MonoBehaviour
             tempHeightTexture.ReadPixels(new Rect(texX, texY, 1, 1), 0, 0);
             tempHeightTexture.Apply(); // Apply the read pixel data to tempHeightTexture.
         } catch (UnityException e) {
-            Debug.LogError($"Error reading pixel from heightRT: {e.Message}. Make sure format ({heightRT.format}) is readable and RT is properly initialized.");
+            Debug.LogError($"Error reading pixel from HeightRT: {e.Message}. Make sure format ({HeightRT.format}) is readable and RT is properly initialized.");
             RenderTexture.active = prevActive; // Crucial: Restore previous active RT in case of error.
             return worldPosition.y - playerFeetOffset; // Fallback on error to prevent incorrect height.
         }
@@ -123,23 +123,23 @@ public class PlayerController : MonoBehaviour
         // Get the color from our 1x1 temporary texture.
         Color heightColor = tempHeightTexture.GetPixel(0, 0);
         // Height is assumed to be stored in the R (red) channel, normalized (0-1).
-        // Scale this normalized value by the terrain's maximum height (terrainWorldSize.y).
-        return heightColor.r * terrainWorldSize.y;
+        // Scale this normalized value by the terrain's maximum height (TerrainWorldSize.y).
+        return heightColor.r * TerrainWorldSize.y;
     }
 
     void Update()
     {
         // --- Camera Look --- 
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
+        float mouseX = Input.GetAxis("Mouse X") * MouseSensitivity * Time.deltaTime;
+        float mouseY = Input.GetAxis("Mouse Y") * MouseSensitivity * Time.deltaTime;
         transform.Rotate(Vector3.up * mouseX); 
         xRotation -= mouseY; 
         xRotation = Mathf.Clamp(xRotation, -90f, 90f);
-        if (playerCamera != null) playerCamera.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+        if (PlayerCamera != null) PlayerCamera.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
 
         // --- Initialize Height Sampling (Check if RT changed at runtime) ---
-        bool currentRtAssigned = heightRT != null;
-        // If the assignment status of heightRT has changed OR if it's assigned but our temp texture is somehow null
+        bool currentRtAssigned = HeightRT != null;
+        // If the assignment status of HeightRT has changed OR if it's assigned but our temp texture is somehow null
         if (currentRtAssigned != useSampledHeight || (currentRtAssigned && tempHeightTexture == null) )
         {
             InitializeHeightSampling();
@@ -152,14 +152,14 @@ public class PlayerController : MonoBehaviour
 
         if (useSampledHeight) {
             // 1. Apply horizontal movement
-            controller.Move(new Vector3(moveDirection.x * speed * Time.deltaTime, 0, moveDirection.z * speed * Time.deltaTime));
+            characterController.Move(new Vector3(moveDirection.x * Speed * Time.deltaTime, 0, moveDirection.z * Speed * Time.deltaTime));
 
             // 2. Determine target height and apply vertical correction
             float targetTerrainHeight = GetTerrainHeightFromRT(transform.position);
             float currentFeetY = transform.position.y - playerFeetOffset;
             float heightError = targetTerrainHeight - currentFeetY;
             
-            controller.Move(new Vector3(0, heightError, 0)); // Apply vertical correction
+            characterController.Move(new Vector3(0, heightError, 0)); // Apply vertical correction
 
             isGrounded = Mathf.Abs(heightError) < 0.1f; // Adjusted threshold
 
@@ -167,30 +167,30 @@ public class PlayerController : MonoBehaviour
                 velocity.y = -2f; // Stick to ground
             } else {
                 // Not grounded on RT (e.g. large height error, or fell off an edge)
-                velocity.y += gravity * Time.deltaTime;
+                velocity.y += Gravity * Time.deltaTime;
             }
         } else { // Standard CharacterController movement
             // Apply horizontal movement
-            controller.Move(moveDirection * speed * Time.deltaTime); 
-            isGrounded = controller.isGrounded;
+            characterController.Move(moveDirection * Speed * Time.deltaTime); 
+            isGrounded = characterController.isGrounded;
 
             if (isGrounded && velocity.y < 0) {
                 velocity.y = -2f; // Stick to ground
             }
             // Apply gravity if not grounded
             if (!isGrounded) { 
-                velocity.y += gravity * Time.deltaTime;
+                velocity.y += Gravity * Time.deltaTime;
             }
         }
 
         // --- Jumping ---
         if (Input.GetButtonDown("Jump") && isGrounded) {
-            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            velocity.y = Mathf.Sqrt(JumpHeight * -2f * Gravity);
             isGrounded = false; // Player is now airborne
         }
 
         // --- Apply Final Vertical Velocity (Gravity/Jump/Sticking) ---
-        controller.Move(velocity * Time.deltaTime);
+        characterController.Move(velocity * Time.deltaTime);
     }
 
     void OnDestroy() {
